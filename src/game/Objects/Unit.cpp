@@ -2826,11 +2826,12 @@ float Unit::MeleeSpellMissChance(Unit *pVictim, WeaponAttackType attType, int32 
     if (GetTypeId() == TYPEID_PLAYER && pVictim->GetTypeId() == TYPEID_PLAYER)
         hitChance = 95.0f + skillDiff * 0.04f;  // PvP misschance base is 5.00%
     else if (pVictim->GetTypeId() == TYPEID_PLAYER)
-        hitChance = 94.4f + skillDiff * 0.04f;
+        hitChance = 95.0f + skillDiff * 0.04f;	//mob miss chance base against a player is 5.00%, not 5.6%
     else if (skillDiff < -10)
-        hitChance = 93.4f + (skillDiff + 10) * 0.4f;        // 7% ~ 6.60% base chance to miss for big skill diff
+        hitChance = 93.0f + (skillDiff + 10) * 0.4f;  // base miss chance for big skill difference is 7% 
+		//(you suffer an extra 2% penalty to base miss for attacking a mob 3 or more levels higher than you, aka orange/red/skull)
     else
-        hitChance = 94.4f + skillDiff * 0.1f;
+        hitChance = 95.0f + skillDiff * 0.1f;	//base miss chance is 5% in PvE, not 5.6%
 
     // Hit chance depends from victim auras
     if (attType == RANGED_ATTACK)
@@ -3160,7 +3161,11 @@ float Unit::MeleeMissChanceCalc(const Unit *pVictim, WeaponAttackType attType) c
     if (!pVictim || !pVictim->IsStandState())
         return 0.0f;
 
-    float missChance = 5.60f; // The base chance to miss is 5.60%
+    float missChance = 5.00f; // The base chance to miss is 5.00% against an even leveled mob -- NOT 5.6%
+	//weapon skill modifies this chance by 0.04% per point of weapon skill difference between you and your target's defense skill
+	//i.e. a boss target has 315 defense; thus, your chance to miss is base 5% plus 0.04% per extra defense point on the boss
+	//e.g. 300 weapon skill against a boss (315 defense), missChance = base + (0.04f * weaponSkillDifference) = 5 + (0.04f * 15) = 5 + (0.60f) = 5.6%
+	//where base = 5% and weaponSkillDifference = targetDefenseSkill - playerWeaponSkill
 
     // The base chance to miss in PvP is 5%
     if (GetTypeId() == TYPEID_PLAYER && pVictim->GetTypeId() == TYPEID_PLAYER)
